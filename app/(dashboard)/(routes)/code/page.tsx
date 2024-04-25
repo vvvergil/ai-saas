@@ -2,27 +2,28 @@
 
 import * as z from "zod";
 import axios from "axios";
-import { MessageSquare } from "lucide-react";
+import { Code } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import Heading from "@/components/heading";
-
 import { formSchema } from "./constants";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import Empty from "@/components/empty";
-import Loader from "@/components/loader";
+
 import { cn } from "@/lib/utils";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Loader from "@/components/loader";
+import Empty from "@/components/empty";
 import UserAvatar from "@/components/user-avatar";
 import BotAvatar from "@/components/bot-avatar";
 
 
-const ConversationPage = () => {
+const CodePage = () => {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([]);
 
@@ -44,7 +45,7 @@ const ConversationPage = () => {
 
       const newMessages = [...messages, userMessage];
 
-      const response = await axios.post("/api/conversation",{
+      const response = await axios.post("/api/code",{
         messages: newMessages,
       });
       console.log(response);
@@ -62,11 +63,11 @@ const ConversationPage = () => {
   return ( 
     <div>
       <Heading 
-        title="AI会话"
-        description="一个AI聊天助手"
-        icon={MessageSquare}
-        iconColor="text-violet-500"
-        bgColor="bg-violet-500/10"
+        title="代码生成"
+        description="帮助你写出完美的代码"
+        icon={Code}
+        iconColor="text-green-700"
+        bgColor="bg-violet-700/10"
       />
       <div className="px-4 lg:px-8">
         <div>
@@ -98,7 +99,7 @@ const ConversationPage = () => {
                         focus-visible:ring-0
                         focus-visible:ring-transparent"
                         disabled={isLoading}
-                        placeholder="你能做些什么？"
+                        placeholder="如何使用React hooks创建具有状态的按钮"
                         {...field}
                       />
                     </FormControl>
@@ -135,9 +136,22 @@ const ConversationPage = () => {
                 )}
               >
                 {message.role !== "user" && <BotAvatar/>}
-                <p className="text-sm">
-                  {message.content as string}
-                </p>
+                <ReactMarkdown 
+                  components={{
+                    pre: ({node, ...props}) => (
+                      <div className="overflow-auto w-full my-2
+                      bg-black/10 p-2 rounded-lg">
+                        <pre {...props} />
+                      </div>
+                    ),
+                    code: ({node, ...props}) => (
+                      <code className="bg-black/10 p-1 rounded-lg" {...props} />
+                    ),
+                  }}
+                  className="text-sm overflow-hidden leading-7"
+                >
+                  {message.content as string || ""}
+                </ReactMarkdown>
                 {message.role === "user" && <UserAvatar/>}
               </div>
             ))}
@@ -148,4 +162,4 @@ const ConversationPage = () => {
    );
 }
  
-export default ConversationPage;
+export default CodePage;
