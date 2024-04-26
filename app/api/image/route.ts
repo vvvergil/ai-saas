@@ -1,18 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import {OpenAI} from "openai"
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const openai = new OpenAI({
   baseURL: "https://api.gptsapi.net/v1",
   apiKey: process.env.OPENAI_API_KEY, // This is the default and can be omitted
 });
-
-const instactionMessage: ChatCompletionMessageParam = {
-  role: 'system',
-  content: "You are a code generation. You must answer only in markdown "+
-  "code snippets. Use code comments for explanations."
-}
 
 export async function POST(
   req:Request
@@ -20,7 +13,7 @@ export async function POST(
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { messages } = body;
+    const { prompt, amount=1, resolution = "512x512"} = body;
 
     if(!userId){
       return new NextResponse("Unauthorized",{ status:401 });
@@ -32,19 +25,30 @@ export async function POST(
       });
     }
 
-    if(!messages){
-      return new NextResponse("Messages are required", { status: 400 });
+    if(!prompt){
+      return new NextResponse("Prompt are required", { status: 400 });
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [instactionMessage, ...messages]
-    });
+    if(!amount){
+      return new NextResponse("Amount are required", { status: 400 });
+    }
 
-    return NextResponse.json(response.choices[0]);
+    if(!resolution){
+      return new NextResponse("Resolution are required", { status: 400 });
+    }
+
+    const response = await openai.images.generate({
+      model: "dall-e-2",
+      prompt,
+      n: parseInt(amount,10),
+      size: resolution,
+    })
+
+
+    return NextResponse.json(response.data);
 
   }catch (error:any){
-    console.log("CODE_ERROR",error);
+    console.log("IMAGE_ERROR",error);
     return new NextResponse("Internal error",{ status:500});
   }
 }

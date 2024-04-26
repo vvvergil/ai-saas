@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import axios from "axios";
-import { ImageIcon } from "lucide-react";
+import { Download, ImageIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/user-avatar";
 import BotAvatar from "@/components/bot-avatar";
 import { Select, SelectValue ,SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
+import { Card, CardFooter } from "@/components/ui/card";
+import Image from "next/image";
 
 
 const ImagePage = () => {
@@ -32,7 +34,7 @@ const ImagePage = () => {
     defaultValues:{
       prompt:"",
       amount: "1",
-      resolution: "512×512"
+      resolution: "512x512"
     }
   });
 
@@ -43,8 +45,8 @@ const ImagePage = () => {
       setImages([]);
 
       const response = await axios.post("/api/image",values);
-
-      const urls = response.data.message.map((image: {url:string}) => image.url);
+      console.log(response);
+      const urls = response.data.map((image: {url:string}) => image.url);
 
       setImages(urls);
 
@@ -180,8 +182,31 @@ const ImagePage = () => {
           {images.length === 0 && !isLoading && (
             <Empty label="还没有绘制图片" />
           )}
-          <div>
-            Image
+          <div className="grid grid-cols-1 md:grid-cols-2 
+          lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
+            {images.map(src => (
+              <Card 
+                key={src}
+                className="rounded-lg overflow-hidden"
+              >
+                <div className="relative aspect-square">
+                  <Image 
+                    alt="Image"
+                    fill
+                    src={src}
+                  />
+                </div> 
+                <CardFooter className="p-2">
+                    <Button 
+                    onClick={()=>window.open(src)}
+                      variant="secondary" 
+                      className="w-full"
+                    >
+                      <Download  className="h-4 w-4 mr-2"/>
+                    </Button>
+                  </CardFooter>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
